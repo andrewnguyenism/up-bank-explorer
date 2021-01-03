@@ -2,7 +2,7 @@
 
 [up-bank-explorer.andrewnguyenism.com](up-bank-explorer.andrewnguyenism.com)
 
-Uses the official [Up API](https://developer.up.com.au) to show you:
+The Up Bank Explorer uses the official [Up API](https://developer.up.com.au) to show you:
 
 - Your accounts, and their balances
 - Your spending broken down by category, time period (TODO: time period comparison)
