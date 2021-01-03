@@ -325,7 +325,7 @@ export const Explorer = ({ token }: Props) => {
                         <div>
                           {new Date(
                             transaction.attributes.createdAt
-                          ).toLocaleString()}
+                          ).toLocaleString('en-AU')}
                         </div>
                         <div>{transaction.attributes.description}</div>
                         <div className="text-sm italic">
