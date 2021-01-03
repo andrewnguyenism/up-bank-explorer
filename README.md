@@ -1,6 +1,6 @@
 # Up Bank Explorer
 
-[up-bank-explorer.andrewnguyenism.com](up-bank-explorer.andrewnguyenism.com)
+[up-bank-explorer.andrewnguyenism.com](https://up-bank-explorer.andrewnguyenism.com)
 
 The Up Bank Explorer uses the official [Up API](https://developer.up.com.au) to show you:
 
