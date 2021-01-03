@@ -1,6 +1,7 @@
 # Up Bank Explorer
 
 Uses the official [Up API](https://developer.up.com.au) to show you:
+
 - Your accounts, and their balances
 - Your spending broken down by category, time period (TODO: time period comparison)
 
@@ -13,6 +14,7 @@ Since moving to Up, I've been using the built-in insights and categories in the 
 So think of this as a Pocketbook-like UI for your Up transaction data.
 
 ## How do I use it myself?
+
 This is an entirely client-side application, so if you want to run this locally you can!
 
 1. Clone the repo
@@ -37,6 +39,7 @@ npm run start
 ```
 
 ## Technology Used
+
 This a Next.js project, bootstraped with the [with-typescript-eslint-jest-app template](https://github.com/vercel/next.js/tree/canary/examples/with-typescript-eslint-jest). That provides:
 
 - [Typescript](https://www.typescriptlang.org/)

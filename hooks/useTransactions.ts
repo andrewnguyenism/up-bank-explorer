@@ -100,7 +100,7 @@ interface UseTransactionsArguments {
 
 const useTransactions = (
   token: string,
-  { all, account, filter }: UseTransactionsArguments,
+  { all, account, filter }: UseTransactionsArguments
 ) => {
   const url = account
     ? `https://api.up.com.au/api/v1/accounts/${account}/transactions`

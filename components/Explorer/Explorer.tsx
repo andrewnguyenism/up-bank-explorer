@@ -13,9 +13,7 @@ import {
   isSameDay,
   format,
 } from 'date-fns'
-import {
-  ResponsivePie
-} from '@nivo/pie'
+import { ResponsivePie } from '@nivo/pie'
 
 import useAccounts, { UpAccountTypeEnum } from '@/hooks/useAccounts'
 import useCategories from '@/hooks/useCategories'
@@ -72,17 +70,14 @@ export const Explorer = ({ token }: Props) => {
   const {
     allTransactions,
     isLoading: isLoadingAllTransactions,
-  } = useTransactions(
-    token,
-    {
-      all: true,
-      account: transactionAccount?.id,
-      filter: {
-        since: since.toISOString(),
-        until: until.toISOString(),
-      },
+  } = useTransactions(token, {
+    all: true,
+    account: transactionAccount?.id,
+    filter: {
+      since: since.toISOString(),
+      until: until.toISOString(),
     },
-  )
+  })
 
   const allTransactionsArray = allTransactions
     ? allTransactions

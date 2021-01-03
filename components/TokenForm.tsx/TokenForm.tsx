@@ -1,5 +1,5 @@
-import { ErrorResponse } from "@/lib/authed-fetcher"
-import { useState } from "react"
+import { ErrorResponse } from '@/lib/authed-fetcher'
+import { useState } from 'react'
 
 interface Props {
   error: ErrorResponse | void
@@ -23,27 +23,25 @@ export const TokenForm = ({ loading, error, onLogInClick }: Props) => {
         placeholder="up:yeah:token"
         value={token}
       />
-      {loading && (
-        <div className="mt-2">Logging in...</div>
-      )}
-      {error && error.errors.map((errorObject) => {
-        if (errorObject.status === "401") {
-          return (
-            <div className="mt-2 text-red-400">Invalid token, please make sure you have entered it correctly.</div>
-          )
-        }
-      })}
+      {loading && <div className="mt-2">Logging in...</div>}
+      {error &&
+        error.errors.map((errorObject) => {
+          if (errorObject.status === '401') {
+            return (
+              <div className="mt-2 text-red-400">
+                Invalid token, please make sure you have entered it correctly.
+              </div>
+            )
+          }
+        })}
       <button
         className="border-2 py-2 px-4 mt-4"
-        onClick={() => onLogInClick(token)
-        }
+        onClick={() => onLogInClick(token)}
       >
         Log In
       </button>
       <div className="mt-8">
-        <div className="font-bold">
-          What&apos;s a Personal Access Token?
-        </div>
+        <div className="font-bold">What&apos;s a Personal Access Token?</div>
         Go to{' '}
         <a
           className="underline"
