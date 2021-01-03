@@ -1,9 +1,17 @@
-const fetcher = (url: string) =>
+const fetcher = (url: string, token: string) =>
   fetch(url, {
     headers: {
-      Authorization: `Bearer ${process.env.NEXT_PUBLIC_UP_ACCESS_TOKEN}`,
+      Authorization: `Bearer ${token}`,
     },
-  }).then((res) => res.json())
+  })
+    .then(async (res) => {
+      if (!res.ok) {
+        const error = await res.json()
+        throw new Object(error) as ErrorResponse
+      }
+      return res
+    })
+    .then((res) => res.json())
 
 export default fetcher
 

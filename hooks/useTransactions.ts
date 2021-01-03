@@ -98,11 +98,10 @@ interface UseTransactionsArguments {
   }
 }
 
-const useTransactions = ({
-  all,
-  account,
-  filter,
-}: UseTransactionsArguments) => {
+const useTransactions = (
+  token: string,
+  { all, account, filter }: UseTransactionsArguments,
+) => {
   const url = account
     ? `https://api.up.com.au/api/v1/accounts/${account}/transactions`
     : `https://api.up.com.au/api/v1/transactions`
@@ -129,7 +128,7 @@ const useTransactions = ({
     const { data, size, setSize, error } = useSWRInfinite<
       ListTransactionsResponse,
       ErrorResponse
-    >(getKey, fetcher)
+    >(getKey, (url) => fetcher(url, token))
     const isLoadingInitialData = !data && !error
     const isLoadingMore =
       isLoadingInitialData ||
@@ -150,7 +149,7 @@ const useTransactions = ({
   } else {
     const { data, error } = useSWR<ListTransactionsResponse, ErrorResponse>(
       url,
-      fetcher
+      (url) => fetcher(url, token)
     )
     return {
       transactions: data,

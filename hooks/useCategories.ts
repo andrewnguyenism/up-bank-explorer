@@ -34,10 +34,10 @@ interface ListCategoriesResponse {
   data: UpCategoryResource[]
 }
 
-const useCategories = () => {
+const useCategories = (token: string) => {
   const { data, error } = useSWR<ListCategoriesResponse, ErrorResponse>(
     'https://api.up.com.au/api/v1/categories',
-    fetcher
+    (url) => fetcher(url, token)
   )
   return {
     categories: data,

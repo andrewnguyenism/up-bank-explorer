@@ -37,10 +37,10 @@ interface ListAccountsResponse {
   links: PaginationLinks
 }
 
-const useAccounts = () => {
+const useAccounts = (token: string) => {
   const { data, error } = useSWR<ListAccountsResponse, ErrorResponse>(
     'https://api.up.com.au/api/v1/accounts',
-    fetcher
+    (url) => fetcher(url, token)
   )
   return {
     accounts: data,
