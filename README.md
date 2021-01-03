@@ -1,5 +1,7 @@
 # Up Bank Explorer
 
+[up-bank-explorer.andrewnguyenism.com](up-bank-explorer.andrewnguyenism.com)
+
 Uses the official [Up API](https://developer.up.com.au) to show you:
 
 - Your accounts, and their balances
