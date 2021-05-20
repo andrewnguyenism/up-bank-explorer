@@ -18,6 +18,7 @@ import { ResponsivePie } from '@nivo/pie'
 import useAccounts, { UpAccountTypeEnum } from '@/hooks/useAccounts'
 import useCategories from '@/hooks/useCategories'
 import useTransactions, { UpTransactionResource } from '@/hooks/useTransactions'
+import { ResponsiveBar } from '@nivo/bar'
 
 interface Props {
   token: string
@@ -47,24 +48,37 @@ export const Explorer = ({ token }: Props) => {
   since = startOfDay(since)
   until = endOfDay(until)
 
-  if (timeFilter === 'this-week') {
-    since = startOfWeek(since)
-    until = endOfWeek(until)
-  } else if (timeFilter === 'last-week') {
-    since = startOfWeek(sub(since, { weeks: 1 }))
-    until = endOfWeek(sub(until, { weeks: 1 }))
-  } else if (timeFilter === 'this-month') {
-    since = startOfMonth(since)
-    until = endOfMonth(until)
-  } else if (timeFilter === 'last-month') {
-    since = startOfMonth(sub(since, { months: 1 }))
-    until = endOfMonth(sub(until, { months: 1 }))
-  } else if (timeFilter === 'this-year') {
-    since = startOfYear(since)
-    until = endOfYear(until)
-  } else if (timeFilter === 'last-year') {
-    since = startOfYear(sub(since, { years: 1 }))
-    until = endOfYear(sub(until, { years: 1 }))
+  switch (timeFilter) {
+    case 'this-week': {
+      since = startOfWeek(since)
+      until = endOfWeek(until)
+      break
+    }
+    case 'last-week': {
+      since = startOfWeek(sub(since, { weeks: 1 }))
+      until = endOfWeek(sub(until, { weeks: 1 }))
+      break
+    }
+    case 'this-month': {
+      since = startOfMonth(since)
+      until = endOfMonth(until)
+      break
+    }
+    case 'last-month': {
+      since = startOfMonth(sub(since, { months: 1 }))
+      until = endOfMonth(sub(until, { months: 1 }))
+      break
+    }
+    case 'this-year': {
+      since = startOfYear(since)
+      until = endOfYear(until)
+      break
+    }
+    case 'last-year': {
+      since = startOfYear(sub(since, { years: 1 }))
+      until = endOfYear(sub(until, { years: 1 }))
+      break
+    }
   }
 
   const {
@@ -74,8 +88,8 @@ export const Explorer = ({ token }: Props) => {
     all: true,
     account: transactionAccount?.id,
     filter: {
-      since: since.toISOString(),
-      until: until.toISOString(),
+      since: timeFilter !== 'all-time' ? since.toISOString() : undefined,
+      until: timeFilter !== 'all-time' ? until.toISOString() : undefined,
     },
   })
 
@@ -84,8 +98,41 @@ export const Explorer = ({ token }: Props) => {
         .flat()
         .reduce(
           (accumulator, response) => [...accumulator, ...response.data],
-          [] as UpTransactionResource[]
+          [] as Array<UpTransactionResource>
         )
+        .filter(
+          (transaction) =>
+            transaction.attributes.amount.valueInBaseUnits < 0 &&
+            transaction.relationships.category.data !== null
+        )
+    : []
+
+  const spendByDayOrMonth = allTransactionsArray.reduce(
+    (pageSummary, transaction) => {
+      const date = new Date(transaction.attributes.createdAt)
+      const dateNoTime = date.toLocaleDateString()
+      const justTheMonthAndYear = format(date, 'MMM yyyy')
+      let whichDateCategoryToUse = dateNoTime
+      if (timeFilter === 'all-time' || timeFilter.includes('year')) {
+        whichDateCategoryToUse = justTheMonthAndYear
+      }
+      return {
+        ...pageSummary,
+        [whichDateCategoryToUse]:
+          (pageSummary?.[whichDateCategoryToUse] ?? 0) +
+          Math.abs(transaction.attributes.amount.valueInBaseUnits / 100),
+      }
+    },
+    {} as Record<string, number>
+  )
+
+  const barChartData = spendByDayOrMonth
+    ? Object.entries(spendByDayOrMonth)
+        .map(([date, amount]) => ({
+          amount,
+          date,
+        }))
+        .sort()
     : []
 
   const spendSummaryByCategory = allTransactionsArray.reduce(
@@ -95,8 +142,8 @@ export const Explorer = ({ token }: Props) => {
           return {
             ...pageSummary,
             [transaction.relationships.category.data.id]:
-              (pageSummary?.[transaction.relationships.category.data.id] || 0) +
-              Math.abs(transaction.attributes.amount.valueInBaseUnits) / 100,
+              (pageSummary?.[transaction.relationships.category.data.id] ?? 0) +
+              Math.abs(transaction.attributes.amount.valueInBaseUnits / 100),
           }
         } else {
           return pageSummary
@@ -112,7 +159,7 @@ export const Explorer = ({ token }: Props) => {
     null
   )
 
-  const chartData = spendSummaryByCategory
+  const pieChartData = spendSummaryByCategory
     ? Object.entries(spendSummaryByCategory)
         .map(([categoryId, amount]) => ({
           amount: amount,
@@ -129,7 +176,7 @@ export const Explorer = ({ token }: Props) => {
       )
     : 0
 
-  const valueFormatter = (value: number) =>
+  const valueFormatter = (value: number | string) =>
     `$${value.toLocaleString('en-AU', {
       minimumFractionDigits: 2,
     })}`
@@ -140,6 +187,9 @@ export const Explorer = ({ token }: Props) => {
   )}`
   if (isSameDay(since, until)) {
     dataDateText = `data for ${format(since, 'dd/MM/yyyy')}`
+  }
+  if (timeFilter === 'all-time') {
+    dataDateText = `data since the beginning of (your) time (with Up)`
   }
 
   return (
@@ -168,16 +218,18 @@ export const Explorer = ({ token }: Props) => {
             accounts?.data.map((account) => (
               <div className="rounded border-2 p-4" key={account.id}>
                 <div className="text-lg">{account.attributes.displayName}</div>
-                <div className="text-3xl font-semibold">{`$${account.attributes.balance.value}`}</div>
+                <div className="text-3xl font-semibold">{`$${(
+                  account.attributes.balance.valueInBaseUnits / 100
+                ).toLocaleString('en-AU', {
+                  minimumFractionDigits: 2,
+                })}`}</div>
               </div>
             ))
           )}
         </div>
       </section>
       <section className="my-4">
-        <div className="text-2xl uppercase font-semibold mb-4">
-          Spend By Category Summary
-        </div>
+        <div className="text-2xl uppercase font-semibold mb-4">Spending</div>
         <div className="">Quick Filters</div>
         <div className="flex flex-wrap mb-4 mt-2">
           <button
@@ -229,12 +281,20 @@ export const Explorer = ({ token }: Props) => {
             This Year
           </button>
           <button
-            className={`border-2 px-4 py-1 uppercase text-sm${
+            className={`border-2 px-4 py-1 mr-4 uppercase text-sm${
               timeFilter === 'last-year' ? ' bg-gray-200' : ''
             }`}
             onClick={() => setTimeFilter('last-year')}
           >
             Last Year
+          </button>
+          <button
+            className={`border-2 px-4 py-1 uppercase text-sm${
+              timeFilter === 'all-time' ? ' bg-gray-200' : ''
+            }`}
+            onClick={() => setTimeFilter('all-time')}
+          >
+            All Time
           </button>
         </div>
         {isLoadingAllTransactions && (
@@ -245,15 +305,28 @@ export const Explorer = ({ token }: Props) => {
         {!isLoadingAllTransactions && categories && spendSummaryByCategory && (
           <section>
             <div>Viewing {dataDateText}</div>
-            <div className="text-xl">
-              Total Spend:{' '}
-              <span className="font-bold">
+            <div className="text-xl text-center">
+              Total Spend
+              <div className="text-2xl font-bold">
                 $
                 {totalSpend.toLocaleString('en-AU', {
                   minimumFractionDigits: 2,
                 })}
-              </span>
+              </div>
             </div>
+            <div className="text-xl uppercase my-4">Over Time</div>
+            <div className="mx-4" style={{ height: '48rem' }}>
+              <ResponsiveBar
+                colors={{ scheme: 'pastel2' }}
+                data={barChartData}
+                indexBy="date"
+                keys={['amount']}
+                labelFormat={valueFormatter}
+                margin={{ bottom: 50, top: 50 }}
+                tooltipFormat={valueFormatter}
+              />
+            </div>
+            <div className="text-xl uppercase mt-4">By Category</div>
             {selectedCategoryId && (
               <>
                 <div>
@@ -277,7 +350,7 @@ export const Explorer = ({ token }: Props) => {
             <div className="mx-4" style={{ height: '48rem' }}>
               <ResponsivePie
                 colors={{ scheme: 'pastel2' }}
-                data={chartData.filter(
+                data={pieChartData.filter(
                   (datum) =>
                     !selectedCategoryId ||
                     datum.categoryId === selectedCategoryId
@@ -299,11 +372,9 @@ export const Explorer = ({ token }: Props) => {
                 {allTransactionsArray
                   .filter(
                     (transaction) =>
-                      transaction.attributes.amount.valueInBaseUnits < 0 &&
-                      transaction.relationships.category.data &&
-                      (!selectedCategoryId ||
-                        selectedCategoryId ===
-                          transaction.relationships.category.data.id)
+                      !selectedCategoryId ||
+                      selectedCategoryId ===
+                        transaction.relationships.category.data?.id
                   )
                   .sort((a, b) => {
                     if (a.attributes.createdAt === b.attributes.createdAt) {
@@ -328,12 +399,15 @@ export const Explorer = ({ token }: Props) => {
                           ).toLocaleString('en-AU')}
                         </div>
                         <div>{transaction.attributes.description}</div>
-                        <div className="text-sm italic">
-                          {transaction.relationships.category.data &&
-                            categoriesObject[
-                              transaction.relationships.category.data?.id
-                            ]}
-                        </div>
+                        {transaction.relationships.category.data !== null && (
+                          <div className="text-sm italic">
+                            {
+                              categoriesObject[
+                                transaction.relationships.category.data.id
+                              ]
+                            }
+                          </div>
+                        )}
                       </div>
                       <div className="text-lg font-semibold">
                         $
